@@ -9,10 +9,9 @@ Some tweaks that have to be made if objects are not being displayed
 glutInitDisplayMode(GLUT_ACCUM|GLUT_RGB); line works on my computer as on few other computers. But on certain computers glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB); works and not the ACCUM buffer. Be sure to read the comments along the code to have better understanding of the code.
 
 Input keys for the application:
-
-   1. LMB to increase the speed of particles inside the Torus(accelerator), ( minimum 4 clicks required to obtain light )
-   2.RMB to decrease the speed of particles inside the Torus(accelerator)
-   3.'m' to go to next frame
-   4.'n' to go to previous frame
-   5.'a' and 'd' to focus the light onto the object under test in the second frame only after the light is generated using step 1
+1. LMB to increase the speed of particles inside the Torus(accelerator), ( minimum 4 clicks required to obtain light )
+2.RMB to decrease the speed of particles inside the Torus(accelerator)
+3.'m' to go to next frame
+4.'n' to go to previous frame
+5.'a' and 'd' to focus the light onto the object under test in the second frame only after the light is generated using step 1
 
