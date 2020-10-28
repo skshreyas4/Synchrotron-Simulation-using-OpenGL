@@ -1,0 +1,485 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<GL/gl.h>
+#include<GL/glut.h>
+#include<math.h>
+#include<Windows.h>
+#include<time.h>
+#include<string.h>
+#define pi 3.142857
+char *str="SYNCHROTRON";
+static double stat=100,tic=300,val=200,ue=400,of=500; /* initial position of the particles inside the torus */
+float io=0.002;   //angle for the output rays in 2nd frame
+static float iio=1.6;
+static float t=30;
+static float inj=0.45;
+static float mark=-1.8;
+static float speed=0;
+static int pagecount=0;
+void display(void);
+void reshape(int x, int y);
+void timer(int);
+void init();
+void mouse(int,int,int,int);
+void keys(unsigned char,int,int);
+int main (int argc, char **argv)
+{
+  glutInit(&argc, argv);
+    glutInitWindowPosition(0,0);
+      glutInitDisplayMode(GLUT_ACCUM|GLUT_RGB);  /*ACCUM works on mine, DOUBLE "works" on college*/
+	glutInitWindowSize(1200,500);
+  glutCreateWindow("Synchrotron");
+  glutDisplayFunc(display);
+  init();
+  glutMouseFunc(mouse);
+  glutKeyboardFunc(keys);        
+  glutReshapeFunc(reshape);
+  glutTimerFunc(0,timer,0);  /*used to call the display function recursively with increased value for their position  */
+  glutMainLoop();
+  return 0;
+}
+void init(void)
+{
+  glClearColor(0.6,0.6,0.6,1.0);
+  gluOrtho2D(-500,500,500,500);
+}
+void display(void)
+{
+    
+    if(pagecount==0)      //frame 1
+    {
+      float x,y;
+      int xy;
+  glMatrixMode(GL_MODELVIEW);         //torus
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
+  glLoadIdentity();
+  glTranslatef(-1.0,0.0,-5.0);
+  glLineWidth(5.0);
+  glColor3f(0.0, 0.0, 0.0);
+  glutWireTorus(0.3,1.3,20,50);
+  glutSwapBuffers();
+    
+    
+      glColor3f(0.0,0.0,0.0);                  //heading
+      glRasterPos2f(0.9,1.7);
+      for(xy=0;xy<strlen(str);xy++)
+       glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,str[xy]);
+      glEnd();
+    
+      glColor3f(0.0,0.0,0.0);        //particle injection block
+        glBegin(GL_LINES);
+        glLineWidth(3.0);
+        glVertex2f(1.0,0.1);
+        glVertex2f(0.4,0.1);
+        glVertex2f(1.0,-0.1);
+        glVertex2f(0.4,-0.1);
+        glEnd();
+        glColor3f(0.0,0.0,0.0);
+      glBegin(GL_POLYGON);
+      glVertex2f(-0.2,-0.2);
+      glVertex2f(0.3,-0.2);
+      glVertex2f(0.4,-0.1);
+      glVertex2f(0.4,0.1);
+      glVertex2f(0.3,0.2);
+      glVertex2f(-0.2,0.2);
+      glEnd();
+
+  glColor3f(0.0,0.0,0.0);         //diffraction chamber start
+  glBegin(GL_LINES);
+  glLineWidth(3.0);
+  glVertex2f(0.0,-1.6);
+  glVertex2f(1.2,-1.6);
+  glVertex2f(1.2,-1.0);
+  glEnd();
+	glColor3f(0.0,0.0,0.0);
+  glBegin(GL_POLYGON);            //diffraction block
+  glVertex2f(1.0,-1.0);
+  glVertex2f(1.0,-1.62);
+  glVertex2f(1.2,-1.62);
+  glVertex2f(1.2,-1.0);
+  glEnd();
+    
+      glColor3f(0.4,0.4,0.4);
+      glBegin(GL_POLYGON);  // magnets
+        glVertex2f(2.7,-0.90);
+        glVertex2f(2.5,-1.15);
+        glVertex2f(3.1,-1.15);
+        glVertex2f(3.3,-0.90);
+        glEnd();
+        glBegin(GL_POLYGON);  //same as above but comes below in the window
+        glVertex2f(2.7,-1.46);
+        glVertex2f(2.5,-1.71);
+        glVertex2f(3.1,-1.71);
+        glVertex2f(3.3,-1.46);
+        glEnd();
+      
+        
+glColor3f(0.0,0.0,0.0);        //right end block
+        glBegin(GL_POLYGON);
+        glVertex2f(4.8,-1.25);
+        glVertex2f(4.8,-1.37);
+        glVertex2f(5.0,-1.37);
+        glVertex2f(5.0,-1.25);
+        glEnd();
+    
+      if(speed>=0.4){
+        glLineWidth(2.0);            //diffraction lines
+    glBegin(GL_LINES);
+    glColor3f(1.0,0.3,0.0);
+        glVertex2f(0.44,-1.55);
+        glVertex2f(0.99,-1.55);
+        glVertex2f(0.57,-1.5);
+        glVertex2f(0.99,-1.5);
+        glVertex2f(0.68,-1.45);
+        glVertex2f(0.99,-1.45);
+        glVertex2f(0.78,-1.4);
+        glVertex2f(0.99,-1.4);
+        glVertex2f(0.87,-1.35);
+        glVertex2f(0.99,-1.35);
+       glEnd();
+    
+        glLineWidth(10.0);          //diffraction output light
+        glBegin(GL_LINES);
+        glColor3f(1.0,6.0,0.0);
+        glVertex2f(1.2,-1.31);
+        glVertex2f(3.0,-1.31);
+        glEnd();
+    
+       glLineWidth(1.5);        //rays under the effect of magnet
+       glBegin(GL_LINES);
+     glVertex2f(3.0,-1.31);
+    glVertex2f(4.8,-1.31);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.26);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.36);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.42);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.20);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.37);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.15);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.40);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.22);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.35);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.27);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.33);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(4.8,-1.29);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.24);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.39);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.23);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.44);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.18);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.47);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.15);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.46);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.16);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.50);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.12);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.51);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.11);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.52);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.10);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.53);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.09);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.49);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.23);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.54);
+          glVertex2f(3.0,-1.31);
+         glVertex2f(5.0,-1.08);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.54);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.08);
+          glVertex2f(3.0,-1.31);
+          glVertex2f(5.0,-1.55);
+          glVertex2f(3.0,-1.31);
+	glVertex2f(5.0,-1.07);
+         glEnd();
+      }
+    
+      glEnable(GL_POINT_SMOOTH);          //particles in torus
+  glColor3f(1.0, 0.4, 0.0);
+  glPointSize(10.0);
+      glBegin(GL_POINTS);
+      glVertex2f(1.1*cos(stat),1.1*sin(stat));  /* here 0.7 determines the radius of the path converted by the particle*/
+  glVertex2f(1.1*cos(stat+1.8),1.1*sin(stat+1.8));
+  glVertex2f(1.1*cos(stat+3.6),1.1*sin(stat+3.6));
+  glVertex2f(1.1*cos(stat+2.5),1.1*sin(stat+2.5));
+  glVertex2f(1.1*cos(stat+4.2),1.1*sin(stat+4.2));
+  glVertex2f(1.15*cos(tic),1.15*sin(tic));
+  glVertex2f(1.15*cos(tic+1.3),1.15*sin(tic+1.3));
+  glVertex2f(1.15*cos(tic+4.7),1.15*sin(tic+4.7));
+  glVertex2f(1.15*cos(tic+2.9),1.15*sin(tic+2.9));
+  glVertex2f(1.15*cos(tic+3.5),1.15*sin(tic+3.5));
+  glVertex2f(1.3*cos(val),1.3*sin(val));
+  glVertex2f(1.3*cos(val+3.4),1.3*sin(val+3.4));
+  glVertex2f(1.3*cos(val+1.2),1.3*sin(val+1.2));
+  glVertex2f(1.3*cos(val+2.5),1.3*sin(val+2.5));
+  glVertex2f(1.3*cos(val+4.2),1.3*sin(val+4.2));
+      glVertex2f(1.35*cos(ue),1.4*sin(ue));
+      glVertex2f(1.35*cos(ue+1.7),1.35*sin(ue+1.7));
+      glVertex2f(1.35*cos(ue+2.8),1.35*sin(ue+2.8));
+      glVertex2f(1.35*cos(ue+3.5),1.35*sin(ue+3.5));
+      glVertex2f(1.35*cos(ue+4.6),1.35*sin(ue+4.6));
+      glVertex2f(1.4*cos(of),1.4*sin(of));
+      glVertex2f(1.4*cos(of+1.7),1.4*sin(of+1.7));
+  glVertex2f(1.4*cos(of+2.4),1.4*sin(of+2.4));
+  glVertex2f(1.4*cos(of+3.7),1.4*sin(of+3.7));
+  glVertex2f(1.4*cos(of+4.3),1.4*sin(of+4.3));
+  if(inj<1.0)
+  {
+  glVertex2f(inj,0.0);
+  }
+  glEnd();
+  glutSwapBuffers();
+
+}
+    
+    
+if(pagecount==1){
+  glDisable(GL_DEPTH_TEST);
+  glMatrixMode(GL_MODELVIEW);         /*torus of background color just for having similar relative co-ordinates for other objects*/
+  glClear(GL_COLOR_BUFFER_BIT);
+  glLoadIdentity();
+  glTranslatef(-1.0,0.0,-5.0);
+  glLineWidth(5.0);
+  glColor3f(0.6, 0.6, 0.6);
+  glutWireTorus(0.3,1.3,20,50);
+  glutSwapBuffers();
+    
+  glColor3f(0.0,0.0,0.0);        //left corner block
+        glBegin(GL_POLYGON);
+        glVertex2f(-3.0,-1.25);
+        glVertex2f(-3.0,-1.37);
+        glVertex2f(-2.8,-1.37);
+        glVertex2f(-2.8,-1.25);
+        glEnd();
+      
+  glColor3f(0.0,0.0,0.0);  //stand
+  glBegin(GL_LINES);
+  glVertex2f(0.0,-1.7);
+  glVertex2f(0.1,-1.7);
+        glVertex2f(0.1,-1.5);
+        glVertex2f(0.2,-1.5);
+        glVertex2f(0.3,-1.4);
+        glVertex2f(-0.2,-1.4);
+        glVertex2f(-0.1,-1.5);
+  glVertex2f(0.0,-1.5);
+        glVertex2f(0.1,-1.5);
+        glVertex2f(0.1,-1.7);
+        glVertex2f(0.0,-1.5);
+        glVertex2f(0.0,-1.7);
+        glVertex2f(-0.1,-1.5);
+        glVertex2f(-0.2,-1.4);
+        glVertex2f(0.2,-1.5);
+        glVertex2f(0.3,-1.4);
+  glEnd();
+    
+  glColor3f(0.0,0.0,0.0);   //hexagon on stand i.e., the object to be analyzed
+  glBegin(GL_POLYGON);
+  glVertex2f(0.0,-1.3);
+  glVertex2f(0.05,-1.4);
+        glVertex2f(0.1,-1.3);
+        glVertex2f(0.1,-1.2);
+        glVertex2f(0.05,-1.1);
+        glVertex2f(0.0,-1.2);
+        glEnd();
+ 
+      
+    if(speed>=0.4){
+      glColor3f(1.0,6.0,0.0);  //lines towards the object,,, keyboard function
+      glBegin(GL_POLYGON);
+      glVertex2f(-2.8,-1.32);
+      glVertex2f(0.0,-1.32+io);
+      glVertex2f(0.0,-1.28+io);
+      glVertex2f(-2.8,-1.28);
+      glEnd();
+ 
+      if(io<0.2&&io>-0.1)
+      {
+        glColor3f(0.5,0.5,0.0);
+        glBegin(GL_POLYGON);
+        glVertex2f(0.1,-1.3);
+       glVertex2f(1.2,-0.7);
+       glVertex2f(1.2,0.6);
+        glVertex2f(0.1,-1.2);
+        glEnd();
+        }    
+}
+    glColor3f(0.0,.0,0.0);  //screen where the structural images forms
+    glBegin(GL_LINES);
+    glVertex2f(1.0,0.7);
+    glVertex2f(1.0,-1.1);
+    glVertex2f(1.0,0.7);
+    glVertex2f(1.4,1.0);  
+    glVertex2f(1.4,1.0);  
+    glVertex2f(1.4,-0.8);
+    glVertex2f(1.4,-0.8);
+    glVertex2f(1.0,-1.1);
+    glEnd();
+ 
+    glColor3f(0.0,0.0,0.0);  //pipe to cpu
+    glBegin(GL_LINES);
+    glVertex2f(1.4,0.2);
+    glVertex2f(2.4,0.2);
+    glVertex2f(1.4,0.15);
+    glVertex2f(2.35,0.15);
+    glVertex2f(2.4,0.2);
+    glVertex2f(2.4,-1.0);
+    glVertex2f(2.35,0.15);
+	glVertex2f(2.35,-1.05);
+    glVertex2f(2.35,-1.05);
+    glVertex2f(3.1,-1.05);
+    glVertex2f(2.4,-1.0);
+    glVertex2f(3.1,-1.0);
+    glEnd();
+ 
+    glColor3f(0.0,0.0,0.0);  //cpu
+    glBegin(GL_POLYGON);
+    glVertex2f(3.1,-1.5);
+    glVertex2f(3.85,-1.5);
+   glVertex2f(3.85,-0.4);
+   glVertex2f(3.1,-0.4);
+    glEnd();
+    glColor3f(0.2,0.2,0.2);
+    glBegin(GL_POLYGON);
+    glVertex2f(3.2,-0.58);
+    glVertex2f(3.75,-0.58);
+    glVertex2f(3.75,-0.5);
+    glVertex2f(3.2,-0.5);
+    glEnd();
+    glColor3f(0.2,0.2,0.2);
+    glBegin(GL_POLYGON);
+    glVertex2f(3.2,-1.4);
+    glVertex2f(3.75,-1.4);
+    glVertex2f(3.75,-0.7);
+    glVertex2f(3.2,-0.7);
+    glEnd();
+
+    glColor3f(0.0,0.0,0.0);  //monitor
+    glBegin(GL_POLYGON);
+    glVertex2f(3.9,-0.6);
+    glVertex2f(4.9,-0.6);
+    glVertex2f(4.9,-1.4);
+    glVertex2f(4.63,-1.4);
+    glVertex2f(4.6,-1.5);
+    glVertex2f(4.2,-1.5);
+    glVertex2f(4.2,-1.4);
+    glVertex2f(3.9,-1.4);
+    glEnd();
+    if(io<0.2&&io>-0.1&&speed>=0.4)        //display on the monitor
+    {
+          glColor3f(1.0,1.0,1.0);
+          glBegin(GL_POLYGON);
+          glVertex2f(4.0,-0.7);
+          glVertex2f(4.8,-0.7);
+          glVertex2f(4.8,-1.3);
+          glVertex2f(4.0,-1.3);
+          glEnd();
+          glColor3f(0.0,0.0,1.0);
+          glBegin(GL_LINES);
+          glVertex2f(4.1,-0.8);
+          glVertex2f(4.7,-0.8);
+          glVertex2f(4.1,-0.9);
+          glVertex2f(4.7,-0.9);
+          glVertex2f(4.1,-1.0);
+          glVertex2f(4.7,-1.0);
+          glVertex2f(4.1,-1.1);
+          glVertex2f(4.7,-1.1);
+          glVertex2f(4.1,-1.2);
+          glVertex2f(4.7,-1.2);    
+        glEnd();
+    }
+    glutSwapBuffers();
+}
+}
+void timer(int q)
+{
+      glutPostRedisplay();
+      glutTimerFunc(t,timer,0);   /*makes recursive call to itself to update new positions of particles*/
+    
+      stat=stat+0.05+speed;  //used to obtain the next position of the particles.
+      tic=tic+0.07+speed;
+      val=val+0.08+speed;
+      ue=ue+0.08+speed;
+      of=of+0.1+speed;
+      inj+=0.01;
+      if(speed<0.4)      /*reset the postition of the rays each time the beams are obtained freshly */
+        io=0.02;
+      if(speed>1.0)      //fix the maximum speed
+        speed=1.0;
+      if(speed<0)
+        speed=0;      //fix the minimum speed
+      if(io>0.2)
+        io=0.2;  // to avoid the rays go to beyond the object
+      if(io<-0.1)
+        io=-0.1;    //    to avoid the rays go to beyond the object
+}
+void mouse(int b,int state,int x,int y)
+{
+    if(b==GLUT_LEFT_BUTTON&&state==GLUT_DOWN)
+    {
+      speed+=0.1;    //increase the speed
+    }
+    if(b==GLUT_RIGHT_BUTTON&&state==GLUT_DOWN)
+    {
+      speed-=0.1;      //decrease the speed
+    }
+}
+void keys(unsigned char key,int x,int y)
+{
+    if(key=='d')
+      io+=0.02;       //move up
+    if(key=='a')
+      io-=0.02;      //move down
+    if(key=='m' && pagecount!=1)
+    {
+      pagecount++;
+    }
+    if(key=='n' && pagecount!=0)
+    {
+      pagecount--;
+    }
+    if(key=='q')
+    {
+      exit(0);
+    }
+}
+void reshape(int x, int y)
+{  
+  glMatrixMode(GL_PROJECTION);  
+  glLoadIdentity();
+  gluPerspective(45.0,(GLdouble)x/(GLdouble)y,4.0,21.0);
+  glMatrixMode(GL_MODELVIEW);
+  glViewport(0,0,x,y);
+}
